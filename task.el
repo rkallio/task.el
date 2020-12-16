@@ -25,5 +25,25 @@
 
 (require 'project)
 
+(require 'vterm nil t)
+
+(defun task-vterm ()
+  "Start vterm in the current project's root directory.
+If a buffer already exists for running a vterm in the project's
+root, switch to it.  Otherwise, create a new vterm buffer.  With
+\\[universal-argument] prefix arg, create a new vterm buffer even
+if one already exists."
+  (interactive)
+  (let* ((default-directory (project-root (project-current t)))
+         (default-project-vterm-name
+           (concat "*" (file-name-nondirectory
+                        (directory-file-name
+                         (file-name-directory default-directory)))
+                   "-vterm*"))
+         (vterm-buffer (get-buffer default-project-vterm-name)))
+    (if (and vterm-buffer (not current-prefix-arg))
+        (pop-to-buffer vterm-buffer)
+      (vterm (generate-new-buffer-name default-project-vterm-name)))))
+
 (provide 'task)
 ;;; task.el ends here
