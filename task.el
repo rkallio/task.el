@@ -79,5 +79,19 @@ buffer.  With \\[universal-argument] prefix arg, create a new
             existing-buffer)))
     (pop-to-buffer term-buffer)))
 
+(defun task-multi-occur (&optional nlines)
+  "Do a `multi-occur' in the project buffers.
+With a prefix argument, show NLINES of context above and below."
+  (interactive "P")
+  (require 'seq)
+  (let* ((predicate '(lambda (buffer)
+                       (string-match "^ " (buffer-name buffer))))
+         ;; Ignore invisible files
+         (project-buffers
+          (seq-remove predicate (project--buffer-list (project-current t)))))
+    (multi-occur project-buffers
+                 (car (occur-read-primary-args))
+                 (prefix-numeric-value nlines))))
+
 (provide 'task)
 ;;; task.el ends here
