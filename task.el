@@ -43,7 +43,7 @@ if one already exists."
         (if (and vterm-buffer (not current-prefix-arg))
             (pop-to-buffer vterm-buffer)
           (vterm (generate-new-buffer-name default-project-vterm-name))))
-    (error "package 'vterm' is not available")))
+    (error "Package 'vterm' is not available")))
 
 (provide 'task)
 ;;; task.el ends here
