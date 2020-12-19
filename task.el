@@ -45,5 +45,39 @@ if one already exists."
           (vterm (generate-new-buffer-name default-project-vterm-name))))
     (error "Package 'vterm' is not available")))
 
+(defun task-term ()
+  "Start a `term' session in the current project's root directory.
+If a buffer already exists for running `term' in the
+project's root, switch to it.  Otherwise, create a new shell
+buffer.  With \\[universal-argument] prefix arg, create a new
+`term' buffer even if one already exists."
+  (interactive)
+  (require 'term)
+  (require 'shell)
+  (let* ((default-directory (project-root (project-current t)))
+         (default-program (or explicit-shell-file-name
+                              (getenv "ESHELL")
+                              (getenv "SHELL")
+                              "/bin/sh"))
+         (default-project-term-name
+           (format "*%s-term*"
+                   (file-name-nondirectory
+                    (directory-file-name
+                     (file-name-directory default-directory)))))
+         (existing-buffer (get-buffer default-project-term-name))
+         (term-buffer
+          (if (or current-prefix-arg (not existing-buffer))
+              (let* ((buffer-name
+                      (generate-new-buffer-name default-project-term-name))
+                     (program (read-from-minibuffer "Run program: "
+                                                    default-program))
+                     (buffer (term-ansi-make-term buffer-name program)))
+                (set-buffer buffer)
+                (term-mode)
+                (term-char-mode)
+                buffer)
+            existing-buffer)))
+    (pop-to-buffer term-buffer)))
+
 (provide 'task)
 ;;; task.el ends here
