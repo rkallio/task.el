@@ -94,7 +94,7 @@ With a prefix argument, show NLINES of context above and below."
                  (prefix-numeric-value nlines))))
 
 (defun task-grep (&optional regexp)
-  "Perform grep on project files."
+  "Run grep with REGEXP on project files."
   (interactive "i")
   (require 'grep)
   (let* ((proj (project-current t))
