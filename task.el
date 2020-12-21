@@ -93,5 +93,18 @@ With a prefix argument, show NLINES of context above and below."
                  (car (occur-read-primary-args))
                  (prefix-numeric-value nlines))))
 
+(defun task-grep (&optional regexp)
+  "Perform grep on project files."
+  (interactive "i")
+  (require 'grep)
+  (let* ((proj (project-current t))
+         (root (project-root proj))
+         (file-relative-name (lambda (file)
+                               (file-relative-name file root)))
+         (relative-paths (mapcar 'file-relative-name (project-files proj)))
+         (search-regexp (or regexp (project--read-regexp))))
+    (grep-compute-defaults)
+    (lgrep search-regexp (mapconcat 'identity relative-paths " ") root)))
+
 (provide 'task)
 ;;; task.el ends here
