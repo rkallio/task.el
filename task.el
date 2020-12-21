@@ -106,5 +106,18 @@ With a prefix argument, show NLINES of context above and below."
     (grep-compute-defaults)
     (lgrep search-regexp (mapconcat 'identity relative-paths " ") root)))
 
+(defun task-ripgrep (&optional regexp)
+  "Run ripgrep with REGEXP on project files."
+  (interactive "i\nP")
+  (if (require 'ripgrep nil t)
+      (let* ((proj (project-current t))
+             (root (project-root proj))
+             (fun (lambda (path)
+                    (concat "--glob !" path)))
+             (args (mapcar fun (project-ignores proj root)))
+             (search-regexp (or regexp (project--read-regexp))))
+        (ripgrep-regexp search-regexp root args))
+    (error "Package 'ripgrep' is not available")))
+
 (provide 'task)
 ;;; task.el ends here
