@@ -34,6 +34,8 @@
 (declare-function term-ansi-make-term "term")
 (declare-function term-mode "term")
 (declare-function term-char-mode "term")
+;; using internal functions is probably brittle
+(declare-function project--buffer-list "project")
 
 ;;;###autoload
 (defun task-vterm (ignore-existing-buffer)
@@ -95,19 +97,18 @@ even if one already exists.  When calling interactively,
         ;; TODO should user be able to choose the used buffer switch method?
         (pop-to-buffer term-buffer)))))
 
+;;;###autoload
 (defun task-multi-occur (&optional nlines)
-  "Do a `multi-occur' in the project buffers.
+  "Do a `multi-occur' in project buffers.
 With a prefix argument, show NLINES of context above and below."
-  (interactive "P")
-  (require 'seq)
-  (let* ((predicate '(lambda (buffer)
-                       (string-match "^ " (buffer-name buffer))))
-         ;; Ignore invisible files
+  (interactive "p")
+  (let* ((buffer-ephemeral-p (lambda (buffer)
+                               (string-prefix-p " " (buffer-name buffer))))
          (project-buffers
-          (seq-remove predicate (project--buffer-list (project-current t)))))
-    (multi-occur project-buffers
-                 (car (occur-read-primary-args))
-                 (prefix-numeric-value nlines))))
+          (seq-remove buffer-ephemeral-p
+                      (project--buffer-list (project-current t)))))
+    ;; TODO get the opened occur buffer and rename it to *<project>-Occur*
+    (multi-occur project-buffers (car (occur-read-primary-args)) nlines)))
 
 (defun task-grep (&optional regexp)
   "Run grep with REGEXP on project files."
