@@ -31,6 +31,9 @@
 
 (declare-function project-root "project" (project))
 (declare-function vterm "ext:vterm" (&optional buffer-name))
+(declare-function term-ansi-make-term "term")
+(declare-function term-mode "term")
+(declare-function term-char-mode "term")
 
 ;;;###autoload
 (defun task-vterm (ignore-existing-buffer)
@@ -57,39 +60,40 @@ even if one already exists.  When calling interactively,
           (vterm (generate-new-buffer-name default-buffer-name))))
     (error "Package `vterm' is not available")))
 
-(defun task-term ()
-  "Start a `term' session in the current project's root directory.
-If a buffer already exists for running `term' in the
-project's root, switch to it.  Otherwise, create a new shell
-buffer.  With \\[universal-argument] prefix arg, create a new
-`term' buffer even if one already exists."
-  (interactive)
-  (require 'term)
-  (require 'shell)
+;;;###autoload
+(defun task-term (ignore-existing-buffer)
+  "Start `term' in the current project's root directory.
+If a `term' buffer already exists for the project, switch to it.
+When IGNORE-EXISTING-BUFFER is non-nil, create a new `term' buffer,
+even if one already exists.  When calling interactively,
+\\[universal-argument] sets IGNORE-EXISTING-BUFFER."
+  (interactive "P")
+  ;; Intentionally shadow `default-directory'
   (let* ((default-directory (project-root (project-current t)))
          (default-program (or explicit-shell-file-name
-                              (getenv "ESHELL")
-                              (getenv "SHELL")
-                              "/bin/sh"))
-         (default-project-term-name
+                           (getenv "ESHELL")
+                           (getenv "SHELL")
+                           "/bin/sh"))
+         (default-buffer-name
            (format "*%s-term*"
                    (file-name-nondirectory
-                    (directory-file-name
-                     (file-name-directory default-directory)))))
-         (existing-buffer (get-buffer default-project-term-name))
-         (term-buffer
-          (if (or current-prefix-arg (not existing-buffer))
-              (let* ((buffer-name
-                      (generate-new-buffer-name default-project-term-name))
-                     (program (read-from-minibuffer "Run program: "
-                                                    default-program))
-                     (buffer (term-ansi-make-term buffer-name program)))
-                (set-buffer buffer)
-                (term-mode)
-                (term-char-mode)
-                buffer)
-            existing-buffer)))
-    (pop-to-buffer term-buffer)))
+                    (directory-file-name default-directory))))
+         (pop-to-previous (not ignore-existing-buffer)))
+    (if-let ((pop-to-previous)
+             (previous-buffer (get-buffer default-buffer-name)))
+        ;; TODO should user be able to choose the used buffer switch method?
+        (pop-to-buffer previous-buffer)
+      ;; FIXME following buffers are named *<project>-term*<N> instead of
+      ;; *<project>-term<N>*
+      (let* ((buffer-name (generate-new-buffer-name default-buffer-name))
+             (program (read-from-minibuffer "Run program: "
+                                            default-program))
+             (term-buffer (term-ansi-make-term buffer-name program)))
+        (with-current-buffer term-buffer
+          (term-mode)
+          (term-char-mode))
+        ;; TODO should user be able to choose the used buffer switch method?
+        (pop-to-buffer term-buffer)))))
 
 (defun task-multi-occur (&optional nlines)
   "Do a `multi-occur' in the project buffers.
