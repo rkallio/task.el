@@ -25,25 +25,37 @@
 
 (require 'project)
 
-(defun task-vterm ()
-  "Start vterm in the current project's root directory.
-If a buffer already exists for running a vterm in the project's
-root, switch to it.  Otherwise, create a new vterm buffer.  With
-\\[universal-argument] prefix arg, create a new vterm buffer even
-if one already exists."
-  (interactive)
+(eval-when-compile
+  (require 'subr-x)
+  (defvar explicit-shell-file-name))
+
+(declare-function project-root "project" (project))
+(declare-function vterm "ext:vterm" (&optional buffer-name))
+
+;;;###autoload
+(defun task-vterm (ignore-existing-buffer)
+  "Start `vterm' in the current project's root directory.
+If a `vterm' buffer already exists for the project, switch to it.
+When IGNORE-EXISTING-BUFFER is non-nil, create a new `vterm' buffer,
+even if one already exists.  When calling interactively,
+\\[universal-argument] sets IGNORE-EXISTING-BUFFER."
+  (interactive "P")
   (if (require 'vterm nil t)
+      ;; Intentionally shadow `default-directory' for `vterm'
       (let* ((default-directory (project-root (project-current t)))
-             (default-project-vterm-name
-               (concat "*" (file-name-nondirectory
-                            (directory-file-name
-                             (file-name-directory default-directory)))
-                       "-vterm*"))
-             (vterm-buffer (get-buffer default-project-vterm-name)))
-        (if (and vterm-buffer (not current-prefix-arg))
-            (pop-to-buffer vterm-buffer)
-          (vterm (generate-new-buffer-name default-project-vterm-name))))
-    (error "Package 'vterm' is not available")))
+             (default-buffer-name
+               (format "*%s-vterm*"
+                       (file-name-nondirectory
+                        (directory-file-name default-directory))))
+             (pop-to-previous (not ignore-existing-buffer)))
+        (if-let ((pop-to-previous)
+                 (previous-buffer (get-buffer default-buffer-name)))
+            ;; TODO should user be able to choose the used buffer switch method?
+            (pop-to-buffer previous-buffer)
+          ;; FIXME following buffers are named *<project>-vterm*<N> instead of
+          ;; *<project>-vterm<N>*
+          (vterm (generate-new-buffer-name default-buffer-name))))
+    (error "Package `vterm' is not available")))
 
 (defun task-term ()
   "Start a `term' session in the current project's root directory.
