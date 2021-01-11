@@ -36,6 +36,7 @@
 (declare-function term-char-mode "term")
 ;; using internal functions is probably brittle
 (declare-function project--buffer-list "project")
+(declare-function ripgrep-regexp "ext:ripgrep")
 
 ;;;###autoload
 (defun task-vterm (ignore-existing-buffer)
@@ -124,18 +125,33 @@ When ran interactively, query for REGEXP."
     (grep-compute-defaults)
     (lgrep regexp (string-join relative-paths " ") project-root)))
 
-(defun task-ripgrep (&optional regexp)
-  "Run ripgrep with REGEXP on project files."
-  (interactive "i\nP")
+;;;###autoload
+(defun task-ripgrep (regexp)
+  "Run ripgrep with REGEXP on project files.
+When ran interactively, query for REGEXP."
+  (interactive (list (project--read-regexp)))
   (if (require 'ripgrep nil t)
-      (let* ((proj (project-current t))
-             (root (project-root proj))
-             (fun (lambda (path)
-                    (concat "--glob !" path)))
-             (args (mapcar fun (project-ignores proj root)))
-             (search-regexp (or regexp (project--read-regexp))))
-        (ripgrep-regexp search-regexp root args))
-    (error "Package 'ripgrep' is not available")))
+      (let* ((project (project-current t))
+             (project-root (project-root project))
+             (glob-prefix (lambda (path)
+                            (concat "--glob !" path)))
+             (arguments (mapcar glob-prefix
+                                (project-ignores project project-root))))
+        (ripgrep-regexp regexp project-root arguments))
+    (error "Package `ripgrep' is not available")))
+
+;;;###autoload
+  (defun task-ag (&optional regexp)
+    "Run `ag' with REGEXP on project files."
+    (interactive "i")
+    (if (require 'ripgrep nil t)
+        (let* ((proj (project-current t))
+               (root (project-root proj))
+               (ag-ignore-list (append ag-ignore-list
+                                       (project-ignores proj root)))
+               (search-regexp (or regexp (project--read-regexp))))
+          (ag-regexp search-regexp root))
+      (error "`ripgrep' is not available"))))
 
 (provide 'task)
 ;;; task.el ends here
