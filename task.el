@@ -110,18 +110,19 @@ With a prefix argument, show NLINES of context above and below."
     ;; TODO get the opened occur buffer and rename it to *<project>-Occur*
     (multi-occur project-buffers (car (occur-read-primary-args)) nlines)))
 
-(defun task-grep (&optional regexp)
-  "Run grep with REGEXP on project files."
-  (interactive "i")
-  (require 'grep)
-  (let* ((proj (project-current t))
-         (root (project-root proj))
-         (file-relative-name (lambda (file)
-                               (file-relative-name file root)))
-         (relative-paths (mapcar 'file-relative-name (project-files proj)))
-         (search-regexp (or regexp (project--read-regexp))))
+;;;###autoload
+(defun task-grep (regexp)
+  "Run `grep' with REGEXP on project files.
+When ran interactively, query for REGEXP."
+  (interactive (list (project--read-regexp)))
+  (let* ((project (project-current t))
+         (project-root (project-root project))
+         (file-path-relative-to-project-root (lambda (file)
+                               (file-relative-name file project-root)))
+         (relative-paths (mapcar file-path-relative-to-project-root
+                                 (project-files project))))
     (grep-compute-defaults)
-    (lgrep search-regexp (mapconcat 'identity relative-paths " ") root)))
+    (lgrep regexp (string-join relative-paths " ") project-root)))
 
 (defun task-ripgrep (&optional regexp)
   "Run ripgrep with REGEXP on project files."
