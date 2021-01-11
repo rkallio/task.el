@@ -1,4 +1,4 @@
-;;; task.el --- Additional commands for project.el
+;;; task.el --- Additional commands for project.el -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2020 Roni Kallio
 
