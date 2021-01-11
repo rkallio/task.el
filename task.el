@@ -27,7 +27,8 @@
 
 (eval-when-compile
   (require 'subr-x)
-  (defvar explicit-shell-file-name))
+  (defvar explicit-shell-file-name)
+  (defvar ag-ignore-list))
 
 (declare-function project-root "project" (project))
 (declare-function vterm "ext:vterm" (&optional buffer-name))
@@ -37,6 +38,7 @@
 ;; using internal functions is probably brittle
 (declare-function project--buffer-list "project")
 (declare-function ripgrep-regexp "ext:ripgrep")
+(declare-function ag-regexp "ext:ag")
 
 ;;;###autoload
 (defun task-vterm (ignore-existing-buffer)
@@ -141,17 +143,18 @@ When ran interactively, query for REGEXP."
     (error "Package `ripgrep' is not available")))
 
 ;;;###autoload
-  (defun task-ag (&optional regexp)
-    "Run `ag' with REGEXP on project files."
-    (interactive "i")
-    (if (require 'ripgrep nil t)
-        (let* ((proj (project-current t))
-               (root (project-root proj))
-               (ag-ignore-list (append ag-ignore-list
-                                       (project-ignores proj root)))
-               (search-regexp (or regexp (project--read-regexp))))
-          (ag-regexp search-regexp root))
-      (error "`ripgrep' is not available"))))
+(defun task-ag (regexp)
+  "Run `ag' with REGEXP on project files.
+When ran interactively, query for REGEXP."
+  (interactive (list (project--read-regexp)))
+  (if (require 'ag nil t)
+      (let* ((project (project-current t))
+             (project-root (project-root project))
+             (ag-ignore-list (append ag-ignore-list
+                                     (project-ignores project project-root))))
+        ;; TODO rewrite ag buffer name
+        (ag-regexp regexp project-root))
+    (error "Package `ag' is not available")))
 
 (provide 'task)
 ;;; task.el ends here
