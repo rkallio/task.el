@@ -1,8 +1,9 @@
 ;;; task.el --- Additional commands for project.el -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020 Roni Kallio
+;; Copyright (C) 2020-2021 Roni Kallio
 
 ;; Author: Roni Kallio <roni@kallio.app>
+;; Maintainer: Roni Kallio <roni@kallio.app>
 
 ;; Task is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
 
 ;;; Commentary:
 
-;; Task extends `project.el' with some much needed commands.
+;; Task extends `project.el' with additional commands.
 
 ;;; Code:
 
