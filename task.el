@@ -125,6 +125,7 @@ When ran interactively, query for REGEXP."
          (relative-paths (mapcar file-path-relative-to-project-root
                                  (project-files project))))
     (grep-compute-defaults)
+    ;; TODO rewrite grep buffer name
     (lgrep regexp (string-join relative-paths " ") project-root)))
 
 ;;;###autoload
@@ -139,6 +140,7 @@ When ran interactively, query for REGEXP."
                             (concat "--glob !" path)))
              (arguments (mapcar glob-prefix
                                 (project-ignores project project-root))))
+        ;; TODO rewrite ripgrep buffer name
         (ripgrep-regexp regexp project-root arguments))
     (error "Package `ripgrep' is not available")))
 
