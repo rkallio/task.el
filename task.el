@@ -74,6 +74,7 @@ When IGNORE-EXISTING-BUFFER is non-nil, create a new `term' buffer,
 even if one already exists.  When calling interactively,
 \\[universal-argument] sets IGNORE-EXISTING-BUFFER."
   (interactive "P")
+  (require 'term)
   ;; Intentionally shadow `default-directory'
   (let* ((default-directory (project-root (project-current t)))
          (default-program (or explicit-shell-file-name
